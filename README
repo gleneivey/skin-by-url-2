@@ -1,0 +1,62 @@
+Skin-by-URL 2 is a MediaWiki extension that will cause the skin used
+to display a page to be determined by the PHP script name in the Wiki
+URL.  For example, MediaWiki URLs normally use the script name
+"index.php" before the page-name portion of the URL.  This extension
+examines requested URLs for a script name other than "index", and if
+present, sets the output skin to one whose name matches the requested
+script name.
+
+When a skin is set via this extension, intra-wiki URLs in the
+generated page are modified so that they incorpoate the correct script
+name to maintain continuity of the skin used as links are followed.
+To make a link from one wiki page to another force a return to the
+normal handling of skins (site-wide default skin selection and
+per-user custom skin selection), use external-link syntax for the URL
+(e.g., "[url]" instead of "[[PageName]]") and specify the "normal" URL
+for the desired page explicitly.
+
+In order for this to work, in addition to installing the extension,
+administrators must create links (tested) or URL aliases (will
+probably also work) from their desired skin-specific script names
+(e.g., from "simple.php" to "index.php") to the default one.  Yes,
+this is a little kludgy and adds an extra step to restoring a
+completely destroyed wiki installation, but it is easy to understand
+and manage.
+
+This extension is licensed under the AGPLv3.  It is a functional clone
+of the obsolete, GPL-licensed MediaWiki extension SkinByURL
+(http://www.mediawiki.org/wiki/Extension:SkinByURL) by Eric Myers, but
+shares none of the original's code.
+
+
+INSTALLATION
+
+Place the skin-by-url-2 files in a directory of the same name under
+"extensions" in your MediaWiki installation, and add the following to
+your LocalSettings.php:
+
+  require_once( "$IP/extensions/skin-by-url-2/skin-by-url-2.php" );
+
+
+STATUS
+
+The implementation of skin-by-url-2 is currently quite immature.  It
+has been tested with MediaWiki v1.15.1 only, and on Ubuntu
+Debian/GNU/Linux only.  Also, this is my first effort in PHP (not to
+mention my first MediaWiki extension), so any changes to make the PHP
+code more idiomatic or the extension more in line with MediaWiki norms
+are more than welcome.
+
+Currently, this extension makes skin selections based on the script
+name in the URL only.  Other available extensions provide (at least)
+essentially the same behavior based on wiki namespace or article
+category, see:
+
+  http://www.mediawiki.org/wiki/Extension:SkinPerNamespace
+  http://www.mediawiki.org/wiki/Extension:AdvancedSkinSystem
+
+If your application needs to select the correct skin based on another
+portion of the URL (a component of the query string, or of the host
+name), I'd welcome changes to this extension implementing that with
+appropriate configuration options.
+
