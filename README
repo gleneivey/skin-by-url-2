@@ -42,7 +42,7 @@ In order for this extension to work, in addition to installing the
 extension, administrators must create links (tested) or URL aliases
 (will probably also work) from their desired skin-specific script
 names to the default one (e.g., from "simple.php" to "index.php").
-Yes, this is a little kludgy and adds an extra step to restoring a
+Yes, this is a little kludgey and adds an extra step to restoring a
 completely destroyed wiki installation, but it is easy to understand
 and manage.  Note that the names of the links used in place of
 "index.php" must still end in ".php" to be recognized (or in whatever

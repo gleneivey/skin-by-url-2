@@ -1,0 +1,65 @@
+{{Extension|templatemode=
+|name          = Skin-by-URL 2
+|status        = beta
+|type1         = skin
+|type2         =
+|hook1         = OutputPageParserOutput
+|hook2         = GetLocalURL
+|username      = gleneivey
+|author        = 
+|description   = Force use of a particular skin based on the URL used to access the wiki
+|image         =
+|imagesize     =
+|version       = 0.1
+|update        =
+|mediawiki     = 1.15
+|php           =
+|license       = AGPLv3
+|download      = http://github.com/gleneivey/skin-by-url-2
+|readme        = http://github.com/gleneivey/skin-by-url-2/blob/master/README
+|changelog     =
+|parameters    = 
+|tags          =
+|rights        = 
+|example       = http://wiki.wontology.org/wiki/help.php?title=WmHelp:AboutWontologyOrg
+|compatibility = 
+}}
+
+==What can this extension do?==
+
+Skin-by-URL 2 will cause the skin used to display a page to be determined by the PHP script name in the wiki URL.  For example, MediaWiki URLs normally use the script name "index.php" before the page-title portion of the URL.  This extension examines request URLs for a script name other than "index", and if present, sets the output skin to one whose name matches the requested script name (if available).
+
+==Usage==
+
+Change links into your wiki which you want to control the display skin from their "normal" format of
+  <nowiki>http://your.wiki.tld/wiki/index.php/Your_Article</nowiki>
+or
+  <nowiki>http://your.wiki.tld/wiki/index.php?title=Your_Article</nowiki>
+to look like:
+  <nowiki>http://your.wiki.tld/wiki/a_skin.php?title=Your_Article</nowiki>
+
+The extension will also support "extra pretty" URL schemes like
+  <nowiki>http://wiki.yoursite.tld/wiki/Your_Article</nowiki>
+  <nowiki>http://wiki.yoursite.tld/Your_Article</nowiki>
+''as long as'' you use the completely explicit URL format ("a_skin", above) when creating links that include a skin-selecting script name.
+
+==Download instructions==
+The public repository for Skin-by-URL 2 is on GitHub at http://github.com/gleneivey/skin-by-url-2
+
+==Installation==
+Place the skin-by-url-2 files in a directory of the same name under "extensions" in your MediaWiki installation, and add the following to your [[Manual:LocalSettings.php|LocalSettings.php]]:
+<source lang="php">
+$wgParserCacheType = CACHE_NONE;
+$wgUsePathInfo = false;
+require_once( "$IP/extensions/skin-by-url-2/skin-by-url-2.php" );
+</source>
+
+In order for this extension to work, in addition to installing the extension, administrators must create links (tested) or URL aliases
+(will probably also work) from their desired skin-specific script names to the default one (e.g., from "simple.php" to "index.php").  Yes, this is a little kludgey and adds an extra step to restoring a completely destroyed wiki installation, but it is easy to understand
+and manage.  Note that the names of the links used in place of "index.php" must still end in ".php" to be recognized (or in whatever
+value you've set for $wgScriptExtension).
+
+See the [http://github.com/gleneivey/skin-by-url-2/blob/master/README README file] for more detailed installation instructions and additional options.
+
+==See also==
+Though it shares no code, Skin-by-URL 2 is a functional clone of the obsolete [[Extension:SkinByURL]].
