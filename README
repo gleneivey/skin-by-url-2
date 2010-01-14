@@ -1,32 +1,32 @@
 Skin-by-URL 2 is a MediaWiki extension that will cause the skin used
 to display a page to be determined by the PHP script name in the Wiki
 URL.  For example, MediaWiki URLs normally use the script name
-"index.php" before the page-name portion of the URL.  This extension
-examines requested URLs for a script name other than "index", and if
+"index.php" before the page-title portion of the URL.  This extension
+examines request URLs for a script name other than "index", and if
 present, sets the output skin to one whose name matches the requested
-script name.
+script name (if available).
 
-When a skin is set via this extension, intra-wiki URLs in the
-generated page are modified so that they incorpoate the correct script
-name to maintain continuity of the skin used as links are followed.
-To make a link from one wiki page to another force a return to the
-normal handling of skins (site-wide default skin selection and
+When a skin is set via this extension, intra-wiki page-viewing URLs in
+the generated page are modified so that they incorpoate the correct
+script name to maintain continuity of the skin used as links are
+followed.  To make a link from one wiki page to another force a return
+to the normal handling of skins (site-wide default skin selection and
 per-user custom skin selection), use external-link syntax for the URL
 (e.g., "[url]" instead of "[[PageName]]") and specify the "normal" URL
 for the desired page explicitly.
 
-In order for this to work, in addition to installing the extension,
-administrators must create links (tested) or URL aliases (will
-probably also work) from their desired skin-specific script names
-(e.g., from "simple.php" to "index.php") to the default one.  Yes,
-this is a little kludgy and adds an extra step to restoring a
-completely destroyed wiki installation, but it is easy to understand
-and manage.
+Intra-wiki links for purposes other than viewing pages (edit and
+history links, etc.) are not modified and continue to use /index.php
+URLs.  In addition, if a URL including the skin name is used for a
+non-viewing "action", it will still not have the skin-selecting
+effect, and MediaWiki's original skin-selection mechanism will
+operate.
 
 This extension is licensed under the AGPLv3.  It is a functional clone
 of the obsolete, GPL-licensed MediaWiki extension SkinByURL
 (http://www.mediawiki.org/wiki/Extension:SkinByURL) by Eric Myers, but
 shares none of the original's code.
+
 
 
 INSTALLATION
@@ -35,7 +35,87 @@ Place the skin-by-url-2 files in a directory of the same name under
 "extensions" in your MediaWiki installation, and add the following to
 your LocalSettings.php:
 
+  $wgParserCacheType = CACHE_NONE;
   require_once( "$IP/extensions/skin-by-url-2/skin-by-url-2.php" );
+
+In order for this extension to work, in addition to installing the
+extension, administrators must create links (tested) or URL aliases
+(will probably also work) from their desired skin-specific script
+names to the default one (e.g., from "simple.php" to "index.php").
+Yes, this is a little kludgy and adds an extra step to restoring a
+completely destroyed wiki installation, but it is easy to understand
+and manage.  Note that the names of the links used in place of
+"index.php" must still end in ".php" to be recognized (or in whatever
+value you've set for $wgScriptExtension).
+
+This extension does not modify MediaWiki's internal notion of "the"
+name of the wiki's entry-point script (e.g., it remains "index.php").
+Because of this, and the fact that MediaWiki looks for the script name
+to find the beginning of article titles when using "pretty URLs", you
+*must* use the explicit-title form of URLs for your wiki:
+
+  /wiki/index.php?title=My_Wiki_Article
+
+for this extension to work, rather than the "pretty" URL format like
+
+  /wiki/index.php/My_Wiki_Article
+
+To accomplish this, also include:
+
+  $wgUsePathInfo = false;
+
+in your LocalSettings.php file.  *OR* if you'd like to use pretty URLs
+for pages in your wiki when they're accessed via index.php, even
+though you'll still have to use "title=" URLs for those that are to
+set the skin, place the line
+
+  $wgUsePathInfo = true;
+
+in your LocalSettings.php file as you normally would to enable this
+behavior, but make sure it comes *before* the 'require_once()' for
+this extension.  Skin-by-URL 2 is smart enough to turn pretty URLs off
+in those instances where a script name other than "index.php" is
+detected.
+
+MediaWiki doesn't provide an extension "hook" that would allow
+Skin-by-URL 2 to support pretty-URL format without modification to a
+core MediaWiki source file.  However, there is a simple fix if you are
+willing to modify the MediaWiki source in your installation, described
+next under "USING WITH 'PRETTY' URLs".
+
+
+
+USING WITH 'PRETTY' URLs
+
+While strongly recommended against, and a great complicating factor
+for future software upgrades, it is possible for you to modify the
+content of the "core" MediaWiki PHP files in order to change
+MediaWiki's behavior.  If you want to use this extension along with
+"pretty" URLs (ones that don't require the "title=" in them, enabled
+by setting '$wgUsePathInfo=true;' in LocalSettings.php), you will have
+to make such a modification.  (And then re-modify each time you
+upgrade your MediaWiki software in the future.)
+
+The change must be made in the 'interpolateTitle()' function in the
+file:
+
+  includes/WebRequest.php
+
+In this function is a series of calls to the other function
+'extractTitle()', all but the first of which is contained in an "if"
+statement that starts out 'if( !matches &&'.  Insert the following
+statements above the first of these 'if( !matches &&' blocks.
+
+  global $wg_SBU2_skinNameFromUrl;
+  if( !$matches && ($wg_SBU2_skinNameFromUrl != "") ) {
+    $script = "/wiki/{$wg_SBU2_skinNameFromUrl}.php/$1";
+    $matches = $this->extractTitle( $path, $script );
+  }
+
+This new code allows MediaWiki to extract article titles from pretty
+URLs that use a skin-selecting script name instead of the default
+one.  Note that, if your wiki uses a $wgScriptPath other than the
+default "/wiki", you should change the preceding code to match.
 
 
 STATUS
@@ -60,3 +140,23 @@ portion of the URL (a component of the query string, or of the host
 name), I'd welcome changes to this extension implementing that with
 appropriate configuration options.
 
+There are several configuration options that could be added which I
+have not.  For example, if you would like all intra-wiki URLs to use
+the skin-selecting script name, you could set $wgScript to match the
+script name in the incoming URL instead of connecting to the
+GetLocalURL hook.
+
+However, just changing the URLs is not sufficient to get MediaWiki to
+use the URL-specified skin to be applied to all page types.  This can
+be accomplished by changing Skin-by-URL 2's skin-selecting callback
+from the OutputPageParserOutput hook to a hook called earlier in the
+process and/or to multiple hooks.  Your mileage may vary.  However,
+I'd welcome any changes like these as long as they're controlled by
+configuration options so that the original behavior can still be
+obtained.
+
+The parser cache must be disabled for this extension in order to
+prevent internal URLs that don't match the current skin selection from
+being served.  Any change that would disable caching (both fetching
+from and storing in) for requests using skin-selecting URLs but not
+globally would be appreciated.
